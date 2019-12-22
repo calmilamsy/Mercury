@@ -127,9 +127,11 @@ publishing {
         register<MavenPublication>("mavenJava") {
             from(components["java"])
             artifactId = base.archivesBaseName
+            project.shadow.component(this)
 
             artifact(sourceJar)
             artifact(javadocJar)
+            artifact(shadowJar)
 
             pom {
                 val url: String by project
