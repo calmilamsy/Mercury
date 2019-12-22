@@ -112,7 +112,6 @@ shadowJar.apply {
 artifacts {
     add("archives", sourceJar)
     add("archives", javadocJar)
-    add("archives", shadowJar)
 }
 
 license {
