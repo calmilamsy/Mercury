@@ -108,6 +108,8 @@ shadowJar.apply {
     classifier = ""
     relocate("org.objectweb.asm", "net.fabricmc.tinyremapper.asm")
     relocate("org.eclipse", "org.cadixdev.shadow.eclipse")
+    relocate("org.osgi", "org.cadixdev.shadow.osgi")
+    relocate("org.apache.felix", "org.cadixdev.shadow.felix")
 }
 
 artifacts {
