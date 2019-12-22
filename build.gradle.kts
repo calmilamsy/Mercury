@@ -6,6 +6,7 @@ plugins {
     `maven-publish`
     id("uk.jamierocks.propatcher") version "1.3.1"
     id("net.minecrell.licenser") version "0.4.1"
+    id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
 val artifactId = name.toLowerCase()
@@ -24,6 +25,7 @@ configurations {
 repositories {
     mavenCentral()
     maven("https://oss.sonatype.org/content/repositories/snapshots/")
+    maven("https://maven.fabricmc.net/")
 }
 
 val jdt = "org.eclipse.jdt:org.eclipse.jdt.core:3.19.0"
@@ -35,6 +37,8 @@ dependencies {
     api("org.cadixdev:lorenz:0.5.0")
 
     "jdt"("$jdt:sources")
+
+    runtime("net.fabricmc:tiny-remapper:0.2.1.61")
 }
 
 tasks.withType<Javadoc> {
@@ -97,9 +101,17 @@ val javadocJar = task<Jar>("javadocJar") {
     from(tasks["javadoc"])
 }
 
+
+val shadowJar: ShadowJar by tasks
+shadowJar.apply {
+    relocate("org.objectweb.asm", "net.fabricmc.tinyremapper.asm")
+    relocate("org.eclipse", "org.cadixdev.shadow.eclipse")
+}
+
 artifacts {
     add("archives", sourceJar)
     add("archives", javadocJar)
+    add("archives", shadowJar)
 }
 
 license {
