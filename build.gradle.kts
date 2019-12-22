@@ -2,7 +2,7 @@ import java.util.concurrent.Callable
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-    `java-library`
+    java
     signing
     `maven-publish`
     id("uk.jamierocks.propatcher") version "1.3.1"
@@ -31,11 +31,11 @@ repositories {
 
 val jdt = "org.eclipse.jdt:org.eclipse.jdt.core:3.19.0"
 dependencies {
-    api(jdt)
+    compile(jdt)
 
     // TODO: Split in separate modules
-    api("org.cadixdev:at:0.1.0-SNAPSHOT")
-    api("org.cadixdev:lorenz:0.5.0")
+    compile("org.cadixdev:at:0.1.0-SNAPSHOT")
+    compile("org.cadixdev:lorenz:0.5.0")
 
     "jdt"("$jdt:sources")
 
