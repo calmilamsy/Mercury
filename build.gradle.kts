@@ -124,7 +124,7 @@ val isSnapshot = version.toString().endsWith("-SNAPSHOT")
 publishing {
     publications {
         register<MavenPublication>("mavenJava") {
-            from(components["java"])
+            //from(components["java"])
             artifactId = base.archivesBaseName
             project.shadow.component(this)
 
