@@ -165,7 +165,7 @@ signing {
 }
 
 tasks.withType<Sign> {
-    onlyIf { !isSnapshot }
+    onlyIf { false }
 }
 
 operator fun Property<String>.invoke(v: String) = set(v)
