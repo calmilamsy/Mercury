@@ -38,7 +38,7 @@ dependencies {
 }
 
 tasks.withType<Javadoc> {
-    exclude("${project.group}.$artifactId.jdt.".replace('.', '/'))
+    exclude("org.cadixdev.$artifactId.jdt.".replace('.', '/'))
 }
 
 // Patched ImportRewrite from JDT
@@ -60,8 +60,8 @@ val extract = task<Copy>("extractJdt") {
 tasks["applyPatches"].inputs.files(extract)
 
 val renames = listOf(
-        "org.eclipse.jdt.core.dom.rewrite" to "$group.$artifactId.jdt.rewrite.imports",
-        "org.eclipse.jdt.internal.core.dom.rewrite.imports" to "$group.$artifactId.jdt.internal.rewrite.imports"
+        "org.eclipse.jdt.core.dom.rewrite" to "org.cadixdev.$artifactId.jdt.rewrite.imports",
+        "org.eclipse.jdt.internal.core.dom.rewrite.imports" to "org.cadixdev.$artifactId.jdt.internal.rewrite.imports"
 )
 
 fun createRenameTask(prefix: String, inputDir: File, outputDir: File, renames: List<Pair<String, String>>): Task
@@ -104,7 +104,7 @@ artifacts {
 
 license {
     header = file("HEADER")
-    exclude("$group.$artifactId.jdt.".replace('.', '/'))
+    exclude("org.cadixdev.$artifactId.jdt.".replace('.', '/'))
 }
 
 val isSnapshot = version.toString().endsWith("-SNAPSHOT")
