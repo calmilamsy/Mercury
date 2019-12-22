@@ -105,6 +105,7 @@ val javadocJar = task<Jar>("javadocJar") {
 
 val shadowJar: ShadowJar by tasks
 shadowJar.apply {
+    classifier = ""
     relocate("org.objectweb.asm", "net.fabricmc.tinyremapper.asm")
     relocate("org.eclipse", "org.cadixdev.shadow.eclipse")
 }
