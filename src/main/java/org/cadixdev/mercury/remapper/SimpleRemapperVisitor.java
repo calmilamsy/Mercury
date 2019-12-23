@@ -12,11 +12,14 @@ package org.cadixdev.mercury.remapper;
 
 import static org.cadixdev.mercury.util.BombeBindings.convertSignature;
 
+import java.lang.reflect.Modifier;
+
 import org.cadixdev.bombe.analysis.InheritanceProvider;
 import org.cadixdev.lorenz.MappingSet;
 import org.cadixdev.lorenz.model.ClassMapping;
 import org.cadixdev.lorenz.model.FieldMapping;
 import org.cadixdev.lorenz.model.MethodMapping;
+import org.cadixdev.lorenz.model.MethodParameterMapping;
 import org.cadixdev.mercury.RewriteContext;
 import org.cadixdev.mercury.analysis.MercuryInheritanceProvider;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -72,6 +75,7 @@ class SimpleRemapperVisitor extends ASTVisitor {
 
     private void remapField(SimpleName node, IVariableBinding binding) {
         if (!binding.isField()) {
+            if (binding.isParameter()) remapParameter(node, binding);
             return;
         }
 
@@ -86,6 +90,40 @@ class SimpleRemapperVisitor extends ASTVisitor {
         }
 
         FieldMapping mapping = classMapping.computeFieldMapping(convertSignature(binding)).orElse(null);
+        if (mapping == null) {
+            return;
+        }
+
+        updateIdentifier(node, mapping.getDeobfuscatedName());
+    }
+
+    private void remapParameter(SimpleName node, IVariableBinding binding) {
+        ITypeBinding declaringClass = binding.getDeclaringClass();
+        if (declaringClass == null || declaringClass.getBinaryName() == null) {
+            return;
+        }
+
+        ClassMapping<?, ?> classMapping = this.mappings.getClassMapping(declaringClass.getBinaryName()).orElse(null);
+        if (classMapping == null) {
+            return;
+        }
+
+        IMethodBinding methodBinding = binding.getDeclaringMethod();
+        assert methodBinding != null: "Parameter binding without real method owner? " + binding;
+        if (!methodBinding.isConstructor()) {
+            classMapping.complete(this.inheritanceProvider, declaringClass);
+        }
+
+        MethodMapping methodMapping = classMapping.getMethodMapping(convertSignature(methodBinding)).orElse(null);
+        if (methodMapping == null) {
+            return;
+        }
+
+        int index = binding.getVariableId();
+        //Bump the index for non-static methods for this to be (technically) index 0
+        if (!Modifier.isStatic(methodBinding.getModifiers())) index++;
+
+        MethodParameterMapping mapping = methodMapping.getParameterMapping(index).orElse(null);
         if (mapping == null) {
             return;
         }
