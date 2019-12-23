@@ -111,7 +111,7 @@ public final class AccessAnalyzerProcessor implements SourceProcessor {
 
 
         private boolean needsTransform(SimpleName node, IBinding binding, ITypeBinding declaringClass) {
-            if (declaringClass == null) {
+            if (declaringClass == null || declaringClass.getBinaryName() == null) {
                 return false;
             }
 

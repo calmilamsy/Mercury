@@ -49,6 +49,11 @@ class SimpleRemapperVisitor extends ASTVisitor {
 
     private void remapMethod(SimpleName node, IMethodBinding binding) {
         ITypeBinding declaringClass = binding.getDeclaringClass();
+
+        if (declaringClass.getBinaryName() == null) {
+            return;
+        }
+
         ClassMapping<?, ?> classMapping = this.mappings.getOrCreateClassMapping(declaringClass.getBinaryName());
 
         if (binding.isConstructor()) {
@@ -71,7 +76,7 @@ class SimpleRemapperVisitor extends ASTVisitor {
         }
 
         ITypeBinding declaringClass = binding.getDeclaringClass();
-        if (declaringClass == null) {
+        if (declaringClass == null || declaringClass.getBinaryName() == null) {
             return;
         }
 
