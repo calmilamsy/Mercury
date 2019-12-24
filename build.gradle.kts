@@ -101,9 +101,9 @@ val sourceJar = task<Jar>("sourceJar") {
     classifier = "sources"
     from(sourceSets["main"].allSource)
     from(idea.module.resolveDependencies().filter {it is ModuleLibrary}.flatMap {(it as ModuleLibrary).sources}.map {
-        val url = it.toUri().toURL()
+        val url = (it as Path).toUri().toURL()
         val connection = url.openConnection() as JarURLConnection;
-        return connection.getJarFileURL()
+        connection.getJarFileURL()
     })
 }
 
