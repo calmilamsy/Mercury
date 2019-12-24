@@ -98,7 +98,7 @@ val sourceJar = task<Jar>("sourceJar") {
     classifier = "sources"
     from(sourceSets["main"].allSource)
     doFirst {
-        println(idea.module.resolveDependencies().filter {it is ModuleLibrary}.flatMap {it.sources})
+        println(idea.module.resolveDependencies().filter {it is ModuleLibrary}.flatMap {(it as ModuleLibrary).sources})
     }
 }
 
