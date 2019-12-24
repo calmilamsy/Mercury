@@ -1,4 +1,5 @@
 import java.util.concurrent.Callable
+//https://github.com/gradle/gradle/blob/master/subprojects/ide/src/main/java/org/gradle/plugins/ide/idea/model/ModuleLibrary.java
 import org.gradle.plugins.ide.idea.model.ModuleLibrary
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
@@ -97,9 +98,7 @@ tasks.withType<Test> {
 val sourceJar = task<Jar>("sourceJar") {
     classifier = "sources"
     from(sourceSets["main"].allSource)
-    doFirst {
-        println(idea.module.resolveDependencies().filter {it is ModuleLibrary}.flatMap {(it as ModuleLibrary).sources})
-    }
+    from(println(idea.module.resolveDependencies().filter {it is ModuleLibrary}.flatMap {(it as ModuleLibrary).sources})
 }
 
 val javadocJar = task<Jar>("javadocJar") {
