@@ -1,4 +1,5 @@
 import java.util.concurrent.Callable
+import org.gradle.plugins.ide.idea.model.ModuleLibrary
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
