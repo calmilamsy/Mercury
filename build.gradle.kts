@@ -5,6 +5,7 @@ plugins {
     java
     signing
     `maven-publish`
+    idea
     id("uk.jamierocks.propatcher") version "1.3.1"
     id("net.minecrell.licenser") version "0.4.1"
     id("com.github.johnrengelman.shadow") version "5.2.0"
@@ -95,6 +96,9 @@ tasks.withType<Test> {
 val sourceJar = task<Jar>("sourceJar") {
     classifier = "sources"
     from(sourceSets["main"].allSource)
+    doFirst {
+        println(idea.module.resolveDependencies())
+    }
 }
 
 val javadocJar = task<Jar>("javadocJar") {
