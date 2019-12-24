@@ -99,7 +99,7 @@ tasks.withType<Test> {
 val sourceJar = task<Jar>("sourceJar") {
     classifier = "sources"
     from(sourceSets["main"].allSource)
-    from(idea.module.resolveDependencies().filter {it is ModuleLibrary}.flatMap {(it as ModuleLibrary).sources}.map {(it as FilePath).file})
+    from(idea.module.resolveDependencies().filter {it is ModuleLibrary}.flatMap {(it as ModuleLibrary).sources}.map {zipTree((it as FilePath).file)})
 }
 
 val javadocJar = task<Jar>("javadocJar") {
