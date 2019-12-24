@@ -1,7 +1,4 @@
 import java.util.concurrent.Callable
-import java.net.JarURLConnection
-import java.nio.file.Path
-
 //https://github.com/gradle/gradle/blob/master/subprojects/ide/src/main/java/org/gradle/plugins/ide/idea/model/ModuleLibrary.java
 import org.gradle.plugins.ide.idea.model.ModuleLibrary
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
@@ -101,11 +98,7 @@ tasks.withType<Test> {
 val sourceJar = task<Jar>("sourceJar") {
     classifier = "sources"
     from(sourceSets["main"].allSource)
-    from(idea.module.resolveDependencies().filter {it is ModuleLibrary}.flatMap {(it as ModuleLibrary).sources}.map {
-        val url = (it as Path).toUri().toURL()
-        val connection = url.openConnection() as JarURLConnection;
-        connection.getJarFileURL()
-    })
+    from(idea.module.resolveDependencies().filter {it is ModuleLibrary}.flatMap {(it as ModuleLibrary).sources}.map {it.file})
 }
 
 val javadocJar = task<Jar>("javadocJar") {
