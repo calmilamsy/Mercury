@@ -1,5 +1,6 @@
 import java.util.concurrent.Callable
 import java.net.JarURLConnection
+import java.nio.file.Path
 
 //https://github.com/gradle/gradle/blob/master/subprojects/ide/src/main/java/org/gradle/plugins/ide/idea/model/ModuleLibrary.java
 import org.gradle.plugins.ide.idea.model.ModuleLibrary
