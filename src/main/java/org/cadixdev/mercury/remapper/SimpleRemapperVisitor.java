@@ -120,6 +120,17 @@ class SimpleRemapperVisitor extends ASTVisitor {
         }
 
         int index = binding.getVariableId();
+        if (index > 0) {
+            ITypeBinding[] parameterTypes = methodBinding.getParameterTypes();
+
+            for (int i = 0, arg = index; i < arg; i++) {
+                ITypeBinding parameterType = parameterTypes[i];
+                if (parameterType.isPrimitive()) continue; //Not going to be a multiple slot type
+
+                String parameterTypeName = parameterType.getName(); //Could also use ITypeBinding#getBinaryName
+                if ("long".equals(parameterTypeName) || "double".equals(parameterTypeName)) index++;
+            }
+        }
         //Bump the index for non-static methods for this to be (technically) index 0
         if (!Modifier.isStatic(methodBinding.getModifiers())) index++;
 
