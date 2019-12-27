@@ -125,7 +125,7 @@ class SimpleRemapperVisitor extends ASTVisitor {
 
             for (int i = 0, arg = index; i < arg; i++) {
                 ITypeBinding parameterType = parameterTypes[i];
-                if (parameterType.isPrimitive()) continue; //Not going to be a multiple slot type
+                if (!parameterType.isPrimitive()) continue; //Not going to be a multiple slot type
 
                 String parameterTypeName = parameterType.getName(); //Could also use ITypeBinding#getBinaryName
                 if ("long".equals(parameterTypeName) || "double".equals(parameterTypeName)) index++;
