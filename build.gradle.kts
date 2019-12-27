@@ -43,7 +43,7 @@ dependencies {
 
     "jdt"("$jdt:sources")
 
-    runtime("net.fabricmc:tiny-remapper:0.2.1.61")
+    runtime("net.fabricmc:tiny-remapper:0.2.1.62")
 }
 
 tasks.withType<Javadoc> {
