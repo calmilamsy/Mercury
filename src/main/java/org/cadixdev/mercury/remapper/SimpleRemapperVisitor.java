@@ -98,18 +98,19 @@ class SimpleRemapperVisitor extends ASTVisitor {
     }
 
     private void remapParameter(SimpleName node, IVariableBinding binding) {
-        ITypeBinding declaringClass = binding.getDeclaringClass();
-        if (declaringClass == null || declaringClass.getBinaryName() == null) {
+        IMethodBinding methodBinding = binding.getDeclaringMethod();
+        if (methodBinding == null) {
             return;
         }
+
+        ITypeBinding declaringClass = methodBinding.getDeclaringClass();
+        assert methodBinding != null: "Parameter binding without real method owner? " + binding + " => " + methodBinding;
 
         ClassMapping<?, ?> classMapping = this.mappings.getClassMapping(declaringClass.getBinaryName()).orElse(null);
         if (classMapping == null) {
             return;
         }
 
-        IMethodBinding methodBinding = binding.getDeclaringMethod();
-        assert methodBinding != null: "Parameter binding without real method owner? " + binding;
         if (!methodBinding.isConstructor()) {
             classMapping.complete(this.inheritanceProvider, declaringClass);
         }
