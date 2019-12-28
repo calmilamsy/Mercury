@@ -135,7 +135,13 @@ class SimpleRemapperVisitor extends ASTVisitor {
         //Bump the index for non-static methods for this to be (technically) index 0
         if (!Modifier.isStatic(methodBinding.getModifiers())) index++;
 
-        MethodParameterMapping mapping = methodMapping.getParameterMapping(index).orElse(null);
+        MethodParameterMapping mapping;
+        try {
+            mapping = methodMapping.getParameterMapping(index).orElse(null);
+        } catch (IndexOutOfBoundsException e) {
+            mapping = null; //Clearly don't have a mapping for this parameter
+        }
+
         if (mapping == null) {
             return;
         }
