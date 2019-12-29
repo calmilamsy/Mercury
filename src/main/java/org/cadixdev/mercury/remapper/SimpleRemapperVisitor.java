@@ -46,7 +46,7 @@ class SimpleRemapperVisitor extends ASTVisitor {
         public int applyAsInt(IMethodBinding method) {
             if (currentMethod == null) {
                 currentMethod = method;
-                expectedArgs = (short) method.getTypeParameters().length;
+                expectedArgs = (short) method.getParameterTypes().length;
                 nextArg = 0;
             } else if (!currentMethod.isEqualTo(method)) {
                 throw new IllegalStateException("Didn't finish " + currentMethod + " before a new declaration " + method);
