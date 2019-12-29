@@ -13,6 +13,7 @@ package org.cadixdev.mercury.remapper;
 import static org.cadixdev.mercury.util.BombeBindings.convertSignature;
 
 import java.lang.reflect.Modifier;
+import java.util.function.ToIntFunction;
 
 import org.cadixdev.bombe.analysis.InheritanceProvider;
 import org.cadixdev.lorenz.MappingSet;
@@ -37,6 +38,28 @@ class SimpleRemapperVisitor extends ASTVisitor {
     final RewriteContext context;
     final MappingSet mappings;
     private final InheritanceProvider inheritanceProvider;
+    private final ToIntFunction<IMethodBinding> parameterTracker = new ToIntFunction<IMethodBinding>() {
+        private IMethodBinding currentMethod;
+        private short expectedArgs, nextArg;
+
+        @Override
+        public int applyAsInt(IMethodBinding method) {
+            if (currentMethod == null) {
+                currentMethod = method;
+                expectedArgs = (short) method.getTypeParameters().length;
+                nextArg = 0;
+            } else if (!currentMethod.isEqualTo(method)) {
+                throw new IllegalStateException("Didn't finish " + currentMethod + " before a new declaration " + method);
+            }
+
+            int out = nextArg++;
+            if (nextArg >= expectedArgs) {
+                nextArg = expectedArgs = -1;
+    	        currentMethod = null;
+            }
+            return out;
+        }
+	};
 
     SimpleRemapperVisitor(RewriteContext context, MappingSet mappings) {
         this.context = context;
@@ -120,7 +143,9 @@ class SimpleRemapperVisitor extends ASTVisitor {
             return;
         }
 
-        int index = binding.getVariableId();
+        int index = parameterTracker.applyAsInt(methodBinding);
+        assert index == binding.getVariableId() || methodBinding.getDeclaringMember() != null:
+            "Lost count of arguments in " + methodBinding.getMethodDeclaration() + " whilst counting " + binding + " in " + methodBinding;
         if (index > 0) {
             ITypeBinding[] parameterTypes = methodBinding.getParameterTypes();
 
