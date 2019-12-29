@@ -13,7 +13,9 @@ package org.cadixdev.mercury.remapper;
 import static org.cadixdev.mercury.util.BombeBindings.convertSignature;
 
 import java.lang.reflect.Modifier;
-import java.util.function.ToIntFunction;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.function.ToIntBiFunction;
 
 import org.cadixdev.bombe.analysis.InheritanceProvider;
 import org.cadixdev.lorenz.MappingSet;
@@ -38,13 +40,17 @@ class SimpleRemapperVisitor extends ASTVisitor {
     final RewriteContext context;
     final MappingSet mappings;
     private final InheritanceProvider inheritanceProvider;
-    private final ToIntFunction<IMethodBinding> parameterTracker = new ToIntFunction<IMethodBinding>() {
+    private final ToIntBiFunction<IVariableBinding, IMethodBinding> parameterTracker = new ToIntBiFunction<IVariableBinding, IMethodBinding>() {
+        private final Map<IVariableBinding, Integer> existing = new IdentityHashMap<>();    
         private IMethodBinding currentMethod;
         private short expectedArgs, nextArg;
 
         @Override
-        public int applyAsInt(IMethodBinding method) {
+        public int applyAsInt(IVariableBinding binding, IMethodBinding method) {
             if (currentMethod == null) {
+                Integer known = existing.get(binding);
+                if (known != null) return known;
+
                 currentMethod = method;
                 expectedArgs = (short) method.getParameterTypes().length;
                 nextArg = 0;
@@ -52,11 +58,15 @@ class SimpleRemapperVisitor extends ASTVisitor {
                 throw new IllegalStateException("Didn't finish " + currentMethod + " before a new declaration " + method);
             }
 
+            assert !existing.containsKey(binding);
             int out = nextArg++;
+
             if (nextArg >= expectedArgs) {
                 nextArg = expectedArgs = -1;
     	        currentMethod = null;
             }
+
+            existing.put(binding, out);
             return out;
         }
 	};
@@ -143,7 +153,7 @@ class SimpleRemapperVisitor extends ASTVisitor {
             return;
         }
 
-        int index = parameterTracker.applyAsInt(methodBinding);
+        int index = parameterTracker.applyAsInt(binding, methodBinding);
         assert index == binding.getVariableId() || methodBinding.getDeclaringMember() != null:
             "Lost count of arguments in " + methodBinding.getMethodDeclaration() + " whilst counting " + binding + " in " + methodBinding;
         if (index > 0) {
