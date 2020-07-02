@@ -13,9 +13,13 @@ package org.cadixdev.mercury.remapper;
 import static org.cadixdev.mercury.util.BombeBindings.convertSignature;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.function.ToIntBiFunction;
+import java.util.Set;
 
 import org.cadixdev.bombe.analysis.InheritanceProvider;
 import org.cadixdev.lorenz.MappingSet;
@@ -30,51 +34,62 @@ import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.LambdaExpression;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
 
 /**
  * Remaps only methods and fields.
  */
 class SimpleRemapperVisitor extends ASTVisitor {
+    private class MethodFrame {
+        private final Set<IVariableBinding> params = Collections.newSetFromMap(new IdentityHashMap<>());
+        public final IMethodBinding method;
 
+        public MethodFrame(IMethodBinding method, List<? extends VariableDeclaration> parameters) {
+            this.method = method;
+
+            short nextArg = 0;
+            for (VariableDeclaration parameter : parameters) {
+                IVariableBinding binding = parameter.resolveBinding();
+                parameterTracker.put(binding, nextArg++);
+                params.add(binding);
+            }
+        }
+
+        void onPop() {
+            parameterTracker.keySet().removeAll(params);
+        }
+    }
     final RewriteContext context;
     final MappingSet mappings;
     private final InheritanceProvider inheritanceProvider;
-    private final ToIntBiFunction<IVariableBinding, IMethodBinding> parameterTracker = new ToIntBiFunction<IVariableBinding, IMethodBinding>() {
-        private final Map<IVariableBinding, Integer> existing = new IdentityHashMap<>();    
-        private IMethodBinding currentMethod;
-        private short expectedArgs, nextArg;
-
-        @Override
-        public int applyAsInt(IVariableBinding binding, IMethodBinding method) {
-            if (currentMethod == null) {
-                Integer known = existing.get(binding);
-                if (known != null) return known;
-
-                currentMethod = method;
-                expectedArgs = (short) method.getParameterTypes().length;
-                nextArg = 0;
-            } else if (!currentMethod.isEqualTo(method)) {
-                throw new IllegalStateException("Didn't finish " + currentMethod + " before a new declaration " + method);
-            }
-
-            assert !existing.containsKey(binding);
-            int out = nextArg++;
-
-            if (nextArg >= expectedArgs) {
-                nextArg = expectedArgs = -1;
-    	        currentMethod = null;
-            }
-
-            existing.put(binding, out);
-            return out;
-        }
-	};
+    private final Deque<MethodFrame> methodStack = new ArrayDeque<>(8);
+    final Map<IVariableBinding, Short> parameterTracker = new IdentityHashMap<>();
 
     SimpleRemapperVisitor(RewriteContext context, MappingSet mappings) {
         this.context = context;
         this.mappings = mappings;
         this.inheritanceProvider = MercuryInheritanceProvider.get(context.getMercury());
+    }
+
+    private void pushMethod(IMethodBinding method, List<? extends VariableDeclaration> parameters) {
+        assert method != null;
+        methodStack.addFirst(new MethodFrame(method, parameters));
+    }
+
+    public int getParameterIndex(IMethodBinding method, IVariableBinding parameter) {
+        assert parameter.isParameter();
+
+        return parameterTracker.getOrDefault(parameter, (short) -1);
+    }
+
+    private void popMethod(IMethodBinding method) {
+        assert method != null;
+        MethodFrame frame = methodStack.removeFirst();
+        assert frame.method.isEqualTo(method): "";
+        frame.onPop();
     }
 
     final void updateIdentifier(SimpleName node, String newName) {
@@ -153,8 +168,8 @@ class SimpleRemapperVisitor extends ASTVisitor {
             return;
         }
 
-        int index = parameterTracker.applyAsInt(binding, methodBinding);
-        assert index == binding.getVariableId() || methodBinding.getDeclaringMember() != null:
+        int index = getParameterIndex(methodBinding, binding);
+        assert index >= 0 && index < binding.getDeclaringMethod().getTypeArguments().length:
             "Lost count of arguments in " + methodBinding.getMethodDeclaration() + " whilst counting " + binding + " in " + methodBinding;
         if (index > 0) {
             ITypeBinding[] parameterTypes = methodBinding.getParameterTypes();
@@ -196,6 +211,20 @@ class SimpleRemapperVisitor extends ASTVisitor {
     }
 
     @Override
+    @SuppressWarnings("unchecked") //The JDT Javadoc says this is fine
+    public boolean visit(MethodDeclaration node) {
+        pushMethod(node.resolveBinding(), node.parameters());
+        return true;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked") //The JDT Javadoc says this is fine
+    public boolean visit(LambdaExpression node) {
+        pushMethod(node.resolveMethodBinding(), node.parameters());
+        return true;
+    }
+
+    @Override
     public final boolean visit(SimpleName node) {
         IBinding binding = node.resolveBinding();
         if (binding != null) {
@@ -204,4 +233,13 @@ class SimpleRemapperVisitor extends ASTVisitor {
         return false;
     }
 
+    @Override
+    public void endVisit(LambdaExpression node) {
+        popMethod(node.resolveMethodBinding());
+    }
+
+    @Override
+    public void endVisit(MethodDeclaration node) {
+        popMethod(node.resolveBinding());
+    }
 }
