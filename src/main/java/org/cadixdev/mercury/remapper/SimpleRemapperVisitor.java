@@ -14,6 +14,7 @@ import static org.cadixdev.mercury.util.BombeBindings.convertSignature;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.IdentityHashMap;
@@ -169,8 +170,14 @@ class SimpleRemapperVisitor extends ASTVisitor {
         }
 
         int index = getParameterIndex(methodBinding, binding);
-        assert index >= 0 && index < binding.getDeclaringMethod().getTypeArguments().length:
-            "Lost count of arguments in " + methodBinding.getMethodDeclaration() + " whilst counting " + binding + " in " + methodBinding;
+        assert index >= 0 && index < Arrays.stream(methodBinding.getParameterTypes()).mapToInt(parameterType -> {
+            if (!parameterType.isPrimitive()) return 1;
+
+            String parameterTypeName = parameterType.getName();
+            return "long".equals(parameterTypeName) || "double".equals(parameterTypeName) ? 2 : 1;
+        }).sum() + (Modifier.isStatic(methodBinding.getModifiers()) ? 0 : 1):
+            "Lost count (" + index + ") of arguments in " + methodBinding.getMethodDeclaration() + " whilst counting " + binding + " in " + methodBinding;
+
         if (index > 0) {
             ITypeBinding[] parameterTypes = methodBinding.getParameterTypes();
 
