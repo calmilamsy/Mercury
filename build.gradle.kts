@@ -121,6 +121,7 @@ tasks.withType<Test> {
 }
 
 tasks.withType<JavaCompile> {
+    options.release.set(11)
 }
 
 tasks.jar {
