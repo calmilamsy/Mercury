@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Minecrell (https://github.com/Minecrell)
+ * Copyright (c) 2018 Cadix Development (https://www.cadixdev.org)
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which accompanies this distribution,
@@ -96,7 +96,12 @@ public final class RewriteContext extends SourceContext {
             return edit;
         }
         if (edit != null) {
-            before.addChild(edit);
+            if (edit instanceof MultiTextEdit) {
+                MultiTextEdit multiTextEdit = (MultiTextEdit) edit;
+                before.addChildren(multiTextEdit.removeChildren());
+            } else {
+                before.addChild(edit);
+            }
         }
         return before;
     }

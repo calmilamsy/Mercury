@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Minecrell (https://github.com/Minecrell)
+ * Copyright (c) 2018 Cadix Development (https://www.cadixdev.org)
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which accompanies this distribution,
@@ -41,6 +41,22 @@ public final class Mercury {
 
     private String sourceCompatibility = JavaCore.VERSION_1_8;
     private Charset encoding = StandardCharsets.UTF_8;
+    /**
+     * Mercury will by default crash if a none-complete classpath is supplied, though
+     * you absolutely <em>should</em> supply a full classpath - we can handle it
+     * gracefully.
+     */
+    private boolean gracefulClasspathChecks = false;
+    /**
+     * See {@link #gracefulClasspathChecks}. This is just for Javadoc as they can be
+     * broken, but we want to ignore
+     */
+    private boolean gracefulJavadocClasspathChecks = false;
+    /**
+     * Mercury will try different combinations of anonymous class indexes when searching
+     * for member mappings if this is true.
+     */
+    private boolean flexibleAnonymousClassMemberLookups = false;
 
     private final List<Path> classPath = new ArrayList<>();
     private final List<Path> sourcePath = new ArrayList<>();
@@ -67,6 +83,30 @@ public final class Mercury {
 
     public void setEncoding(Charset encoding) {
         this.encoding = Objects.requireNonNull(encoding, "encoding");
+    }
+
+    public boolean isGracefulClasspathChecks() {
+        return this.gracefulClasspathChecks;
+    }
+
+    public void setGracefulClasspathChecks(final boolean enable) {
+        this.gracefulClasspathChecks = enable;
+    }
+
+    public boolean isGracefulJavadocClasspathChecks() {
+        return this.gracefulJavadocClasspathChecks;
+    }
+
+    public void setGracefulJavadocClasspathChecks(final boolean enable) {
+        this.gracefulJavadocClasspathChecks = enable;
+    }
+
+    public boolean isFlexibleAnonymousClassMemberLookups() {
+        return this.flexibleAnonymousClassMemberLookups;
+    }
+
+    public void setFlexibleAnonymousClassMemberLookups(final boolean enable) {
+        this.flexibleAnonymousClassMemberLookups = enable;
     }
 
     public List<Path> getClassPath() {

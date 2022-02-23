@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Minecrell (https://github.com/Minecrell)
+ * Copyright (c) 2018 Cadix Development (https://www.cadixdev.org)
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which accompanies this distribution,
@@ -24,6 +24,7 @@ import org.cadixdev.lorenz.model.ClassMapping;
 import org.cadixdev.mercury.SourceContext;
 import org.cadixdev.mercury.SourceProcessor;
 import org.cadixdev.mercury.analysis.MercuryInheritanceProvider;
+import org.cadixdev.mercury.util.GracefulCheck;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
@@ -69,12 +70,14 @@ public final class AccessAnalyzerProcessor implements SourceProcessor {
 
         private static final AccessTransform TRANSFORM = AccessTransform.of(AccessChange.PUBLIC, ModifierChange.NONE);
 
+        private final SourceContext context;
         private final AccessTransformSet ats;
         private final MappingSet mappings;
         private final InheritanceProvider inheritanceProvider;
         private String newPackage;
 
         private Visitor(SourceContext context, AccessTransformSet ats, MappingSet mappings) {
+            this.context = context;
             this.ats = ats;
             this.mappings = mappings;
             this.inheritanceProvider = MercuryInheritanceProvider.get(context.getMercury());
@@ -111,7 +114,7 @@ public final class AccessAnalyzerProcessor implements SourceProcessor {
 
 
         private boolean needsTransform(SimpleName node, IBinding binding, ITypeBinding declaringClass) {
-            if (declaringClass == null || declaringClass.getBinaryName() == null) {
+            if (declaringClass == null || GracefulCheck.checkGracefully(this.context, declaringClass)) {
                 return false;
             }
 
@@ -124,7 +127,12 @@ public final class AccessAnalyzerProcessor implements SourceProcessor {
                 return false;
             }
 
-            ClassMapping<?, ?> mapping = this.mappings.getClassMapping(declaringClass.getBinaryName()).orElse(null);
+            final String binaryName = declaringClass.getBinaryName();
+            if (binaryName == null) {
+                throw new IllegalStateException("Binary name for binding " + declaringClass.getQualifiedName() + " is null. Did you forget to add a library to the classpath?");
+            }
+
+            ClassMapping<?, ?> mapping = this.mappings.getClassMapping(binaryName).orElse(null);
 
             String packageName;
             if (mapping != null) {
@@ -138,6 +146,11 @@ public final class AccessAnalyzerProcessor implements SourceProcessor {
         }
 
         private void analyze(SimpleName node, ITypeBinding binding) {
+            if (binding.isLocal()) {
+                // It's illegal to make local classes public
+                // They can't be used outside the source file anyways
+                return;
+            }
             if (needsTransform(node, binding, binding)) {
                 this.ats.getOrCreateClass(binding.getBinaryName()).merge(TRANSFORM);
             }

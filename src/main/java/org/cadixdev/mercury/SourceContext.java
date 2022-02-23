@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Minecrell (https://github.com/Minecrell)
+ * Copyright (c) 2018 Cadix Development (https://www.cadixdev.org)
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which accompanies this distribution,
@@ -72,7 +72,7 @@ public class SourceContext {
 
     public final Document loadDocument() throws IOException {
         if (this.document == null) {
-            this.document = new Document(new String(Files.readAllBytes(this.sourceFile), StandardCharsets.UTF_8));
+            this.document = new Document(new String(Files.readAllBytes(this.sourceFile), this.mercury.getEncoding()));
         }
         return this.document;
     }
